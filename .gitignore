@@ -171,3 +171,4 @@ cython_debug/
 data/osm/germany.osm.pbf
 data/osm/cache/
 outputs/
+run_wuppertal_full.py
