@@ -23,6 +23,8 @@ from shapely.geometry import LineString
 from shapely.geometry import Point
 from six import string_types
 
+from dave_core.datapool.local_osm_source import get_local_osm_data
+from dave_core.datapool.local_osm_source import get_local_osm_meta_data
 from dave_core.datapool.read_data import get_data_path
 from dave_core.settings import dave_settings
 
@@ -53,10 +55,28 @@ def sort_servers_by_latency():
 
 def osm_request(data_type, area):
     """
-    This function requests OSM data from database or OSM directly
+    This function requests OSM data, first trying a local Germany-wide
+    .osm.pbf file (dave_settings["osm_pbf_path"]) and falling back to a
+    direct Overpass API request if the local file is missing or unusable.
     """
+    local_data, status = get_local_osm_data(data_type, area)
+    if local_data is not None:
+        return local_data, get_local_osm_meta_data()
+
+    if status == "missing":
+        from tqdm import tqdm
+
+        tqdm.write("OSM data locally not found")
+    elif status == "disabled":
+        from tqdm import tqdm
+
+        tqdm.write("Local OSM PBF source disabled via settings; using OSM server.")
+    # "no_reader" and "unreadable" already printed their own specific
+    # message inside get_local_osm_data()
+
     data_param = dave_settings["osm_tags"][data_type]
     request_data = GeoDataFrame([])
+    meta_data = None
     for osm_type in data_param[2]:
         # create tags
         tags = (
@@ -67,6 +87,12 @@ def osm_request(data_type, area):
         # get data from OSM directly via API query
         data, meta_data = query_osm(osm_type, area, recurse="down", tags=tags)
         request_data = concat([request_data, data], ignore_index=True)
+
+    if meta_data is None:
+        raise RuntimeError(
+            f"osm_request('{data_type}') did not query any osm_type - "
+            f"check dave_settings['osm_tags']['{data_type}'][2]."
+        )
     return request_data, meta_data
 
 
@@ -115,6 +141,8 @@ uninteresting_tags = {
     "tiger:upload_uuid",
 }
 
+
+### Hasnain
 
 # http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide
 def query_osm(typ, bbox=None, recurse=None, tags="", raw=False, meta=False, **kwargs):

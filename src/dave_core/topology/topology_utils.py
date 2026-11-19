@@ -247,7 +247,14 @@ def run_steiner_tree_net_group(grid_data, net_group, terminal_nodes, nodes, edge
             )
             grid_data.lv_data.lv_nodes = concat([grid_data.lv_data.lv_nodes, nodes_res])
             grid_data.lv_data.lv_lines = concat([grid_data.lv_data.lv_lines, edges_res])
-        except:  # noqa: E722
+        except Exception as exception:  # noqa: E722
+            from tqdm import tqdm
+
+            tqdm.write(
+                f"LV steiner tree failed for net group {net_group.net_group} "
+                f"(terminal_nodes={len(terminal_nodes)}): "
+                f"{type(exception).__name__}: {exception}"
+            )
             net_group_fail = net_group.net_group
     elif len(terminal_nodes) == 1 and nodes.loc[terminal_nodes[0]].node_type == "mvlv_substation":
         # chek if only the substation is a terminal node. In this case the substation will be deleted

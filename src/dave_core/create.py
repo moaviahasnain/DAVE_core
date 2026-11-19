@@ -183,7 +183,7 @@ def create_grid(
     crs="EPSG:3035",
 ):
     """
-    This is the main function of dave. This function generates automaticly grid models for power
+    This is the main function of dave. This function generates automatically grid models for power
     and gas networks in the defined target area
 
     INPUT:

@@ -62,7 +62,7 @@ def get_household_power(consumption_data, household_size):
     return p_mw, q_mvar
 
 
-def create_lv_loads_residential(grid_data, pbar, building_nodes):
+def create_lv_loads_residential(grid_data, pbar):
     """
     This function estimates the active and reactive power consumption for residential loads at /
     low voltage grids
@@ -209,7 +209,7 @@ def create_lv_loads_residential(grid_data, pbar, building_nodes):
                 building_node = building_nodes[building_nodes.geometry.within(building_geom)]
                 if not building_node.empty:
                     lv_node = building_node.iloc[0]
-                else:
+                elif not building_nodes.empty:
                     # check the case that the building centroid is outside building boundary
                     building_centroid = building_geom.centroid
                     centroid_distance = building_nodes.geometry.apply(
@@ -217,6 +217,12 @@ def create_lv_loads_residential(grid_data, pbar, building_nodes):
                     )
                     if centroid_distance.min() < 11.2:
                         lv_node = building_nodes.loc[centroid_distance.idxmin()]
+                    else:
+                        # no suitably close lv connection node - skip this household
+                        continue
+                else:
+                    # no building-connection lv nodes exist at all for this area
+                    continue
                 # create residential load
                 load_df = GeoDataFrame(
                     {

@@ -6,6 +6,7 @@
 
 
 from os import cpu_count
+from os import environ
 from os import path
 from pathlib import Path
 
@@ -26,6 +27,30 @@ def set_dave_settings():
         "crs_degree": "EPSG:4326",  # crs which is based on the unit degree
         "crs_main": "EPSG:3035",  # crs which is based on the unit meter
         # --- data request
+
+        # Hasnain
+
+        # --- local OSM data source (avoids Overpass server timeouts/failures)
+        # path to a locally available, Germany-wide .osm.pbf extract.
+        # Leave as "" to always use the OSM server. Can be overridden with
+        # the DAVE_OSM_PBF_PATH environment variable (no personal paths
+        # are hard-coded into the repo this way).
+                "osm_pbf_path": environ.get("DAVE_OSM_PBF_PATH", ""),
+        ),
+        # set to False to force the OSM server even if a local file is configured
+        "osm_use_local_pbf": True,
+        # location index pyosmium uses to resolve way geometries.
+        # "flex_mem" (default) is fastest but needs several GB RAM for a
+        # Germany-wide file; use "sparse_mmap_array" for lower memory usage.
+        "osm_pbf_location_index": environ.get("DAVE_OSM_PBF_INDEX", "flex_mem"),
+        # directory used to persist extracted OSM features so repeated runs
+        # for the same area do not need to re-scan the multi-GB pbf file.
+        # Leave as "" to auto-derive a "cache" folder next to the pbf file.
+        "osm_pbf_cache_dir": environ.get("DAVE_OSM_PBF_CACHE_DIR", ""),
+
+        # Hasnain
+
+
         # fraunhofer ownCloud datapool
         "fhg_oc_url": "https://owncloud.fraunhofer.de/index.php/s/Y5J1lBxeau3N48p",
         # OEP tables (oep_name:(schema, geometry_parameter, latest_version))
