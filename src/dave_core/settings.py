@@ -35,9 +35,9 @@ def set_dave_settings():
         # Leave as "" to always use the OSM server. Can be overridden with
         # the DAVE_OSM_PBF_PATH environment variable (no personal paths
         # are hard-coded into the repo this way).
-                "osm_pbf_path": environ.get("DAVE_OSM_PBF_PATH", ""),
-        ),
+        "osm_pbf_path": environ.get("DAVE_OSM_PBF_PATH", ""),
         # set to False to force the OSM server even if a local file is configured
+
         "osm_use_local_pbf": True,
         # location index pyosmium uses to resolve way geometries.
         # "flex_mem" (default) is fastest but needs several GB RAM for a
