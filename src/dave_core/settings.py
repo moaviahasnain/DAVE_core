@@ -27,9 +27,6 @@ def set_dave_settings():
         "crs_degree": "EPSG:4326",  # crs which is based on the unit degree
         "crs_main": "EPSG:3035",  # crs which is based on the unit meter
         # --- data request
-
-        # Hasnain
-
         # --- local OSM data source (avoids Overpass server timeouts/failures)
         # path to a locally available, Germany-wide .osm.pbf extract.
         # Leave as "" to always use the OSM server. Can be overridden with
@@ -47,9 +44,6 @@ def set_dave_settings():
         # for the same area do not need to re-scan the multi-GB pbf file.
         # Leave as "" to auto-derive a "cache" folder next to the pbf file.
         "osm_pbf_cache_dir": environ.get("DAVE_OSM_PBF_CACHE_DIR", ""),
-
-        # Hasnain
-
 
         # fraunhofer ownCloud datapool
         "fhg_oc_url": "https://owncloud.fraunhofer.de/index.php/s/Y5J1lBxeau3N48p",

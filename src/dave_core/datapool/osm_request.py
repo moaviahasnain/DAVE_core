@@ -141,9 +141,6 @@ uninteresting_tags = {
     "tiger:upload_uuid",
 }
 
-
-### Hasnain
-
 # http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide
 def query_osm(typ, bbox=None, recurse=None, tags="", raw=False, meta=False, **kwargs):
     """
