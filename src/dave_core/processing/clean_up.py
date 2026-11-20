@@ -116,8 +116,7 @@ def clean_disconnected_elements_power(grid_data, min_number_nodes):
                 elif component_typ == "substations":
                     for subtyp, comp in grid_data.components_power[component_typ].items():
                         if not comp.empty and "dave_name" in nodes.columns:
-                            # subst_to_drop = nodes[nodes.dave_name.isin(nodes_dis)].subst_dave_name
-                            subst_to_drop = nodes[nodes.dave_name.isin(nodes_dis)].subs_dave_name
+                            subst_to_drop = nodes[nodes.dave_name.isin(nodes_dis)].subst_dave_name
                             if not subst_to_drop.isnull().all():
                                 to_drop = comp[comp.dave_name.isin(nodes_dis)].index
                                 grid_data.components_power[component_typ][subtyp].drop(
