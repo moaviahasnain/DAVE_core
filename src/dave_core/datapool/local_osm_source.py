@@ -191,24 +191,24 @@ def get_local_osm_data(data_type, area):
     disk_cache_dir = _disk_cache_dir(pbf_path, area)
     disk_result = _load_disk_cache(disk_cache_dir, categories)
     if disk_result is not None:
-        _status(f"\n Loaded local OSM data from disk cache ({disk_cache_dir.name}).")
+        _status(f"\n\nLoaded local OSM data from disk cache ({disk_cache_dir.name}).")
         _SCAN_CACHE[cache_key] = disk_result
         return disk_result.get(data_type, GeoDataFrame([])), "disk_cache"
 
-    _status(f"\n Scanning local OSM file ({pbf_path.name})... this can take several minutes.")
+    _status(f"\n\nScanning local OSM file ({pbf_path.name})... this can take several minutes.")
     _scan_start = time.time()
     try:
         scan_result = _scan_pbf(pbf_path, area)
     except Exception as exception:
-        print(f"\n Local OSM file could not be read ({exception}). Falling back to the OSM server.")
+        print(f"\n\nLocal OSM file could not be read ({exception}). Falling back to the OSM server.")
         return None, "unreadable"
-    _status(f"\n Local OSM scan finished in {time.time() - _scan_start:.1f} seconds.")
+    _status(f"\n\nLocal OSM scan finished in {time.time() - _scan_start:.1f} seconds.")
 
     try:
         _save_disk_cache(disk_cache_dir, scan_result)
     except Exception as exception:
         # a failed cache write should never break the actual OSM request
-        _status(f"\n Could not write local OSM disk cache ({exception}); continuing without it.")
+        _status(f"\n\nCould not write local OSM disk cache ({exception}); continuing without it.")
 
     _SCAN_CACHE[cache_key] = scan_result
     return scan_result.get(data_type, GeoDataFrame([])), "local"

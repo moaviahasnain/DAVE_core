@@ -28,6 +28,7 @@ from dave_core.converter.create_mynts import create_mynts
 from dave_core.converter.create_pandapipes import create_pandapipes
 from dave_core.converter.create_pandapower import create_pandapower
 from dave_core.dave_structure import create_empty_dataset
+from dave_core.datapool.osm_download import download_basic_data
 from dave_core.geography import target_area
 from dave_core.io.convert_format import change_crs
 from dave_core.io.convert_format import change_nan
@@ -161,6 +162,7 @@ def create_grid(
     # optional
     dave_data=None,
     geodata=None,
+    ensure_local_osm_data=True,
     power_levels=None,
     gas_levels=None,
     convert_power=None,
@@ -208,9 +210,15 @@ def create_grid(
         **dave_data** (string, default None) - Path for hand over an existing \
             dave dataset to use previously generated data as a basis and skip \
             the process of creating it again
-        **geodata** (list, default None) - this parameter defines which geodata should be considered.\
+                **geodata** (list, default None) - this parameter defines which geodata should be considered.\
             options: 'roads','buildings','landuse', 'railways', 'waterways', []. \
                 there could be choose: one/multiple geoobjects or 'ALL' \n
+        **ensure_local_osm_data** (boolean, default True) - if true and any geodata is \
+            needed for this call, checks whether a local Germany-wide .osm.pbf file is \
+            present and not older than ~6 months, downloading/refreshing it automatically \
+            if needed, before any OSM data is requested. If the check or download fails \
+            for any reason, DAVE_core logs a warning and continues - individual OSM \
+            requests still fall back to the Overpass server as before. \n
         **power_levels** (list, default None) - this parameter defines which power levels should be \
             considered. options: 'ehv','hv','mv','lv', []. there could be choose: one/multiple \
                 level(s) or 'ALL' \n
@@ -320,6 +328,47 @@ def create_grid(
         geodata = list(map(str.lower, geodata))
     roads_l, buildings_l, landuse_l = geo_info_needs(power_levels, gas_levels, loads)
 
+    # determine which geodata categories are actually needed for this call
+    need_roads = (
+        bool("roads" in geodata or "ALL" in geodata or roads_l)
+        if grid_data.road_data.roads.empty
+        else False
+    )
+    need_buildings = (
+        bool("buildings" in geodata or "ALL" in geodata or buildings_l)
+        if grid_data.buildings.residential.empty and grid_data.buildings.commercial.empty
+        else False
+    )
+    need_landuse = (
+        bool("landuse" in geodata or "ALL" in geodata or landuse_l)
+        if grid_data.landuse.empty
+        else False
+    )
+    need_railways = (
+        bool("railways" in geodata or "ALL" in geodata) if grid_data.railways.empty else False
+    )
+    need_waterways = (
+        bool("waterways" in geodata or "ALL" in geodata) if grid_data.waterways.empty else False
+    )
+
+    # make sure a usable, reasonably fresh local OSM file is available before
+    # any OSM data is requested - but only if this call actually needs OSM
+    # data, and never let a failed check/download crash the whole run (the
+    # existing Overpass fallback in osm_request() remains the safety net)
+    if ensure_local_osm_data and any(
+        [need_roads, need_buildings, need_landuse, need_railways, need_waterways]
+    ):
+        try:
+            download_basic_data()
+        except Exception as exception:
+            from tqdm import tqdm
+
+            tqdm.write(
+                f"Could not ensure local OSM data is up to date ({exception}); "
+                f"continuing - OSM requests will fall back to the Overpass "
+                f"server as needed."
+            )
+
     # collect target area information and geodata
     file_exists, file_name = target_area(
         grid_data,
@@ -331,27 +380,11 @@ def create_grid(
         nuts_region=nuts_region,
         own_area=own_area,
         buffer=0,
-        roads=(
-            bool("roads" in geodata or "ALL" in geodata or roads_l)
-            if grid_data.road_data.roads.empty
-            else False
-        ),
-        buildings=(
-            bool("buildings" in geodata or "ALL" in geodata or buildings_l)
-            if grid_data.buildings.residential.empty and grid_data.buildings.commercial.empty
-            else False
-        ),
-        landuse=(
-            bool("landuse" in geodata or "ALL" in geodata or landuse_l)
-            if grid_data.landuse.empty
-            else False
-        ),
-        railways=(
-            bool("railways" in geodata or "ALL" in geodata) if grid_data.railways.empty else False
-        ),
-        waterways=(
-            bool("waterways" in geodata or "ALL" in geodata) if grid_data.waterways.empty else False
-        ),
+        roads=need_roads,
+        buildings=need_buildings,
+        landuse=need_landuse,
+        railways=need_railways,
+        waterways=need_waterways,
     )
     # save interim status of the informations in user folder
     save_dataset_to_user_folder(grid_data, output_format, output_folder, filename, save_data)

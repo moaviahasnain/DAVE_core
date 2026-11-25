@@ -70,7 +70,7 @@ def osm_request(data_type, area):
     elif status == "disabled":
         from tqdm import tqdm
 
-        tqdm.write("Local OSM PBF source disabled via settings; using OSM server.")
+        tqdm.write("\nLocal OSM PBF source disabled via settings; getting the data from the OSM Server.")
     # "no_reader" and "unreadable" already printed their own specific
     # message inside get_local_osm_data()
 
